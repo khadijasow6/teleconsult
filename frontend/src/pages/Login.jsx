@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import "../App.css";
 
 function Login() {
+const navigate = useNavigate();
 const [formData, setFormData] = useState({
 email: "",
 password: "",
@@ -29,11 +30,14 @@ setLoading(true);
 
 try {
   const response = await api.post("/auth/login", formData);
+localStorage.setItem("token", response.data.token);
+localStorage.setItem("user", JSON.stringify(response.data.user));
 
-  localStorage.setItem("token", response.data.token);
-  localStorage.setItem("user", JSON.stringify(response.data.user));
+setMessage("Connexion réussie !");
 
-  setMessage("Connexion réussie !");
+if (response.data.user.role === "PATIENT") {
+  navigate("/patient/dashboard");
+}
   console.log("Utilisateur connecté :", response.data.user);
 } catch (requestError) {
   setError(

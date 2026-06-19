@@ -1,5 +1,5 @@
 import "../App.css";
-
+import { Link } from "react-router-dom";
 function Home()  {
 return ( <div> <header className="header"> <div className="topbar"> <div className="container topbar-content"> <p>Votre plateforme de téléconsultation médicale</p>
 
@@ -26,10 +26,9 @@ return ( <div> <header className="header"> <div className="topbar"> <div classNa
         </div>
 
         <div className="nav-buttons">
-          <button type="button" className="login-btn">
+           <Link to="/login" className="login-btn">
             Connexion
-          </button>
-
+          </Link>
           <button type="button" className="appointment-btn">
             Prendre rendez-vous
           </button>
@@ -60,14 +59,14 @@ return ( <div> <header className="header"> <div className="topbar"> <div classNa
           </p>
 
           <div className="hero-buttons">
-            <button type="button" className="primary-btn">
-              Prendre rendez-vous
-            </button>
+  <Link to="/register" className="primary-btn">
+    Créer un compte
+  </Link>
 
-            <button type="button" className="outline-btn">
-              Trouver un médecin
-            </button>
-          </div>
+  <a href="#medecins" className="outline-btn">
+    Trouver un médecin
+  </a>
+</div>
         </div>
 
         <div className="hero-image">
@@ -194,7 +193,7 @@ return ( <div> <header className="header"> <div className="topbar"> <div classNa
         Découvrez nos médecins disponibles pour vos consultations à distance.
       </p>
     </div>
-    
+
 <div className="doctors-grid">
   <article className="doctor-card">
     <img
