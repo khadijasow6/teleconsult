@@ -34,10 +34,17 @@ localStorage.setItem("token", response.data.token);
 localStorage.setItem("user", JSON.stringify(response.data.user));
 
 setMessage("Connexion réussie !");
+const role = response.data.user.role;
 
-if (response.data.user.role === "PATIENT") {
-  navigate("/patient/dashboard");
+if (role === "PATIENT") {
+navigate("/patient/dashboard");
+} else if (role === "MEDECIN") {
+navigate("/doctor/dashboard");
+} else if (role === "ADMIN") {
+navigate("/admin/dashboard");
 }
+
+
   console.log("Utilisateur connecté :", response.data.user);
 } catch (requestError) {
   setError(
