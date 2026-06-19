@@ -25,7 +25,27 @@ const protect = (req, res, next) => {
     });
   }
 };
+const authorizeRoles = (...allowedRoles) => {
+return (req, res, next) => {
+if (
+!req.user ||
+!allowedRoles.includes(req.user.role)
+) {
+return res.status(403).json({
+success: false,
+message:
+"Accès refusé : vous n’avez pas l’autorisation nécessaire",
+});
+}
+
+
+next();
+
+
+};
+};
 
 module.exports = {
-  protect,
+protect,
+authorizeRoles,
 };
