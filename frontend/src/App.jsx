@@ -6,11 +6,13 @@ import Register from "./pages/Register";
 import PatientDashboard from "./pages/PatientDashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import Doctors from "./pages/Doctors";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
 return ( <BrowserRouter> <Routes>
 <Route path="/" element={<Home />} />
+
 
     <Route path="/login" element={<Login />} />
 
@@ -21,6 +23,15 @@ return ( <BrowserRouter> <Routes>
       element={
         <ProtectedRoute allowedRoles={["PATIENT"]}>
           <PatientDashboard />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/patient/doctors"
+      element={
+        <ProtectedRoute allowedRoles={["PATIENT"]}>
+          <Doctors />
         </ProtectedRoute>
       }
     />

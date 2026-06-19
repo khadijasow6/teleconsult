@@ -1,4 +1,8 @@
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../services/api";
+import PrescriptionForm from "../components/PrescriptionForm";
+
 import "../App.css";
 
 function DoctorDashboard() {
@@ -13,53 +17,205 @@ first_name: "Mamadou",
 last_name: "Diop",
 };
 
+const [appointments, setAppointments] = useState([]);
+const [availabilities, setAvailabilities] = useState([]);
+
+const [formData, setFormData] = useState({
+start_time: "",
+end_time: "",
+});
+
+const [loading, setLoading] = useState(true);
+const [message, setMessage] = useState("");
+const [error, setError] = useState("");
+
+const loadDashboard = useCallback(async () => {
+try {
+setLoading(true);
+setError("");
+
+
+  const [appointmentsResponse, availabilitiesResponse] =
+    await Promise.all([
+      api.get("/appointments/doctor"),
+      api.get("/appointments/doctor/availabilities"),
+    ]);
+
+  setAppointments(
+    appointmentsResponse.data.appointments || []
+  );
+
+  setAvailabilities(
+    availabilitiesResponse.data.availabilities || []
+  );
+} catch (requestError) {
+  console.error(requestError);
+
+  setError(
+    requestError.response?.data?.message ||
+      "Impossible de charger le dashboard médecin."
+  );
+} finally {
+  setLoading(false);
+}
+
+
+}, []);
+
+useEffect(() => {
+loadDashboard();
+}, [loadDashboard]);
+
+const handleChange = (event) => {
+setFormData({
+...formData,
+[event.target.name]: event.target.value,
+});
+};
+
+const handleAddAvailability = async (event) => {
+event.preventDefault();
+
+
+setMessage("");
+setError("");
+
+try {
+  const response = await api.post(
+    "/appointments/availabilities",
+    formData
+  );
+
+  setMessage(response.data.message);
+
+  setFormData({
+    start_time: "",
+    end_time: "",
+  });
+
+  await loadDashboard();
+} catch (requestError) {
+  setError(
+    requestError.response?.data?.message ||
+      "Impossible d’ajouter cette disponibilité."
+  );
+}
+
+
+};
+
+const handleAppointmentStatus = async (
+appointmentId,
+status
+) => {
+setMessage("");
+setError("");
+
+
+try {
+  const response = await api.patch(
+    `/appointments/${appointmentId}/status`,
+    {
+      status,
+    }
+  );
+
+  setMessage(response.data.message);
+
+  await loadDashboard();
+} catch (requestError) {
+  setError(
+    requestError.response?.data?.message ||
+      "Impossible de modifier le rendez-vous."
+  );
+}
+
+
+};
+
 const handleLogout = () => {
 localStorage.removeItem("token");
 localStorage.removeItem("user");
 navigate("/login");
 };
 
+const formatDateTime = (dateValue) => {
+if (!dateValue) {
+return "Date non disponible";
+}
+
+
+return new Date(dateValue).toLocaleString("fr-FR", {
+  dateStyle: "long",
+  timeStyle: "short",
+});
+
+
+};
+
+const pendingAppointments = appointments.filter(
+(appointment) => appointment.status === "EN_ATTENTE"
+);
+
+const confirmedAppointments = appointments.filter(
+(appointment) => appointment.status === "CONFIRME"
+);
+
 return ( <div className="dashboard-layout"> <aside className="dashboard-sidebar"> <div className="dashboard-logo"> <span className="logo-symbol">✚</span> <span>SamaSanté</span> </div>
 
+
     <nav className="dashboard-menu">
-      <button type="button" className="dashboard-menu-item active">
+      <button
+        type="button"
+        className="dashboard-menu-item active"
+      >
         <span>▦</span>
         Tableau de bord
       </button>
 
-      <button type="button" className="dashboard-menu-item">
-        <span>📅</span>
-        Mon agenda
-      </button>
-
-      <button type="button" className="dashboard-menu-item">
+      <button
+        type="button"
+        className="dashboard-menu-item"
+        onClick={() =>
+          document
+            .getElementById("doctor-availabilities")
+            ?.scrollIntoView({
+              behavior: "smooth",
+            })
+        }
+      >
         <span>🕒</span>
         Mes disponibilités
       </button>
 
-      <button type="button" className="dashboard-menu-item">
+      <button
+        type="button"
+        className="dashboard-menu-item"
+        onClick={() =>
+          document
+            .getElementById("doctor-requests")
+            ?.scrollIntoView({
+              behavior: "smooth",
+            })
+        }
+      >
         <span>📨</span>
         Demandes de rendez-vous
       </button>
 
-      <button type="button" className="dashboard-menu-item">
-        <span>👥</span>
-        Mes patients
-      </button>
-
-      <button type="button" className="dashboard-menu-item">
-        <span>💻</span>
-        Consultations
-      </button>
-
-      <button type="button" className="dashboard-menu-item">
-        <span>📄</span>
-        Ordonnances
-      </button>
-
-      <button type="button" className="dashboard-menu-item">
-        <span>👤</span>
-        Mon profil
+      <button
+        type="button"
+        className="dashboard-menu-item"
+        onClick={() =>
+          document
+            .getElementById("doctor-appointments")
+            ?.scrollIntoView({
+              behavior: "smooth",
+            })
+        }
+      >
+        <span>📅</span>
+        Mon agenda
       </button>
     </nav>
 
@@ -76,39 +232,51 @@ return ( <div className="dashboard-layout"> <aside className="dashboard-sidebar"
   <main className="dashboard-main">
     <header className="dashboard-header">
       <div>
-        <p className="dashboard-welcome">Espace médecin</p>
+        <p className="dashboard-welcome">
+          Espace médecin
+        </p>
 
         <h1>
-          Bonjour, Dr {user.first_name} {user.last_name}
+          Bonjour, Dr {user.first_name?.trim()}{" "}
+          {user.last_name?.trim()}
         </h1>
 
         <p>
-          Gérez votre agenda, vos patients et vos consultations.
+          Gérez vos disponibilités et les rendez-vous de
+          vos patients.
         </p>
       </div>
 
       <div className="dashboard-user">
         <div className="dashboard-user-avatar">
-          {user.first_name?.charAt(0)}
-          {user.last_name?.charAt(0)}
+          {user.first_name?.trim().charAt(0)}
+          {user.last_name?.trim().charAt(0)}
         </div>
 
         <div>
           <strong>
-            Dr {user.first_name} {user.last_name}
+            Dr {user.first_name?.trim()}{" "}
+            {user.last_name?.trim()}
           </strong>
+
           <span>Médecin</span>
         </div>
       </div>
     </header>
 
+    {message && (
+      <p className="auth-success">{message}</p>
+    )}
+
+    {error && <p className="auth-error">{error}</p>}
+
     <section className="dashboard-statistics">
       <article className="dashboard-stat-card">
-        <div className="stat-icon">📅</div>
+        <div className="stat-icon">🕒</div>
 
         <div>
-          <span>Rendez-vous aujourd’hui</span>
-          <strong>6</strong>
+          <span>Disponibilités créées</span>
+          <strong>{availabilities.length}</strong>
         </div>
       </article>
 
@@ -117,16 +285,7 @@ return ( <div className="dashboard-layout"> <aside className="dashboard-sidebar"
 
         <div>
           <span>Demandes en attente</span>
-          <strong>3</strong>
-        </div>
-      </article>
-
-      <article className="dashboard-stat-card">
-        <div className="stat-icon">👥</div>
-
-        <div>
-          <span>Patients suivis</span>
-          <strong>48</strong>
+          <strong>{pendingAppointments.length}</strong>
         </div>
       </article>
 
@@ -134,186 +293,189 @@ return ( <div className="dashboard-layout"> <aside className="dashboard-sidebar"
         <div className="stat-icon">✅</div>
 
         <div>
-          <span>Consultations terminées</span>
-          <strong>126</strong>
+          <span>Rendez-vous confirmés</span>
+          <strong>{confirmedAppointments.length}</strong>
+        </div>
+      </article>
+
+      <article className="dashboard-stat-card">
+        <div className="stat-icon">📅</div>
+
+        <div>
+          <span>Total des rendez-vous</span>
+          <strong>{appointments.length}</strong>
         </div>
       </article>
     </section>
 
-    <section className="dashboard-grid">
-      <article className="dashboard-panel next-appointment-panel">
+    <section
+      className="dashboard-grid"
+      id="doctor-availabilities"
+    >
+      <article className="dashboard-panel">
         <div className="dashboard-panel-heading">
           <div>
-            <span>Prochaine consultation</span>
-            <h2>Rendez-vous à venir</h2>
-          </div>
-
-          <span className="appointment-status">Confirmé</span>
-        </div>
-
-        <div className="next-appointment">
-          <div className="dashboard-user-avatar">AS</div>
-
-          <div className="appointment-doctor">
-            <span>Patient</span>
-            <h3>Aly Sow</h3>
-            <p>📅 Samedi 20 juin 2026</p>
-            <p>🕙 10 h 00 – 10 h 30</p>
-            <p>Motif : douleurs et fatigue</p>
+            <span>Planning</span>
+            <h2>Ajouter une disponibilité</h2>
           </div>
         </div>
 
-        <div className="appointment-actions">
-          <button
-            type="button"
-            className="secondary-dashboard-button"
-          >
-            Voir le dossier
-          </button>
+        <form onSubmit={handleAddAvailability}>
+          <div className="form-group">
+            <label htmlFor="start-time">
+              Date et heure de début
+            </label>
+
+            <input
+              id="start-time"
+              type="datetime-local"
+              name="start_time"
+              value={formData.start_time}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="end-time">
+              Date et heure de fin
+            </label>
+
+            <input
+              id="end-time"
+              type="datetime-local"
+              name="end_time"
+              value={formData.end_time}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
           <button
-            type="button"
+            type="submit"
             className="primary-dashboard-button"
           >
-            Démarrer la consultation
+            Ajouter le créneau
           </button>
-        </div>
+        </form>
       </article>
 
-      <article className="dashboard-panel quick-actions-panel">
+      <article className="dashboard-panel">
         <div className="dashboard-panel-heading">
           <div>
-            <span>Accès rapide</span>
-            <h2>Gérer mon activité</h2>
+            <span>Créneaux enregistrés</span>
+            <h2>Mes disponibilités</h2>
           </div>
         </div>
 
-        <div className="quick-actions">
-          <button type="button">
-            <span>🕒</span>
+        {loading && <p>Chargement...</p>}
 
-            <div>
-              <strong>Ajouter une disponibilité</strong>
-              <small>Créer un nouveau créneau</small>
+        {!loading && availabilities.length === 0 && (
+          <p>
+            Vous n’avez encore créé aucune disponibilité.
+          </p>
+        )}
+
+        <div className="appointment-list">
+          {availabilities.map((availability) => (
+            <div
+              className="appointment-list-item"
+              key={availability.availability_id}
+            >
+              <div className="appointment-date">
+                <strong>
+                  {new Date(
+                    availability.start_time
+                  ).getDate()}
+                </strong>
+
+                <span>
+                  {new Date(
+                    availability.start_time
+                  ).toLocaleDateString("fr-FR", {
+                    month: "short",
+                  })}
+                </span>
+              </div>
+
+              <div>
+                <h3>
+                  {formatDateTime(
+                    availability.start_time
+                  )}
+                </h3>
+
+                <p>
+                  Fin :{" "}
+                  {formatDateTime(
+                    availability.end_time
+                  )}
+                </p>
+              </div>
+
+              <span className="appointment-status">
+                {availability.appointment_id
+                  ? "Réservé"
+                  : "Disponible"}
+              </span>
             </div>
-          </button>
-
-          <button type="button">
-            <span>📅</span>
-
-            <div>
-              <strong>Consulter mon agenda</strong>
-              <small>Voir mes rendez-vous programmés</small>
-            </div>
-          </button>
-
-          <button type="button">
-            <span>📄</span>
-
-            <div>
-              <strong>Rédiger une ordonnance</strong>
-              <small>Créer une prescription numérique</small>
-            </div>
-          </button>
+          ))}
         </div>
       </article>
     </section>
 
-    <section className="dashboard-grid dashboard-bottom-grid">
-      <article className="dashboard-panel">
-        <div className="dashboard-panel-heading">
-          <div>
-            <span>Programme du jour</span>
-            <h2>Rendez-vous d’aujourd’hui</h2>
-          </div>
+    <section
+      className="dashboard-panel"
+      id="doctor-requests"
+    >
+      <div className="dashboard-panel-heading">
+        <div>
+          <span>À traiter</span>
+          <h2>Demandes de rendez-vous</h2>
+        </div>
+      </div>
 
-          <button
-            type="button"
-            className="dashboard-text-button"
+      {!loading && pendingAppointments.length === 0 && (
+        <p>Aucune demande en attente.</p>
+      )}
+
+      <div className="appointment-list">
+        {pendingAppointments.map((appointment) => (
+          <div
+            className="appointment-list-item"
+            key={appointment.appointment_id}
           >
-            Voir l’agenda
-          </button>
-        </div>
-
-        <div className="appointment-list">
-          <div className="appointment-list-item">
-            <div className="appointment-date">
-              <strong>10</strong>
-              <span>H 00</span>
+            <div className="dashboard-user-avatar">
+              {appointment.patient_first_name
+                ?.charAt(0)}
+              {appointment.patient_last_name?.charAt(0)}
             </div>
 
             <div>
-              <h3>Aly Sow</h3>
-              <p>Consultation générale</p>
-            </div>
+              <h3>
+                {appointment.patient_first_name}{" "}
+                {appointment.patient_last_name}
+              </h3>
 
-            <span className="appointment-status">
-              Confirmé
-            </span>
-          </div>
+              <p>
+                {formatDateTime(
+                  appointment.start_time
+                )}
+              </p>
 
-          <div className="appointment-list-item">
-            <div className="appointment-date">
-              <strong>11</strong>
-              <span>H 00</span>
-            </div>
-
-            <div>
-              <h3>Fatou Ndiaye</h3>
-              <p>Consultation de suivi</p>
-            </div>
-
-            <span className="appointment-status">
-              Confirmé
-            </span>
-          </div>
-
-          <div className="appointment-list-item">
-            <div className="appointment-date">
-              <strong>14</strong>
-              <span>H 30</span>
-            </div>
-
-            <div>
-              <h3>Moussa Fall</h3>
-              <p>Première consultation</p>
-            </div>
-
-            <span className="appointment-status">
-              Confirmé
-            </span>
-          </div>
-        </div>
-      </article>
-
-      <article className="dashboard-panel">
-        <div className="dashboard-panel-heading">
-          <div>
-            <span>À valider</span>
-            <h2>Demandes de rendez-vous</h2>
-          </div>
-
-          <button
-            type="button"
-            className="dashboard-text-button"
-          >
-            Tout afficher
-          </button>
-        </div>
-
-        <div className="appointment-list">
-          <div className="appointment-list-item">
-            <div className="dashboard-user-avatar">AM</div>
-
-            <div>
-              <h3>Aminata Mbaye</h3>
-              <p>21 juin 2026 · 09 h 00</p>
+              <p>Motif : {appointment.reason}</p>
             </div>
 
             <div className="doctor-request-actions">
               <button
                 type="button"
                 className="request-accept-button"
+                onClick={() =>
+                  handleAppointmentStatus(
+                    appointment.appointment_id,
+                    "CONFIRME"
+                  )
+                }
               >
                 Accepter
               </button>
@@ -321,43 +483,100 @@ return ( <div className="dashboard-layout"> <aside className="dashboard-sidebar"
               <button
                 type="button"
                 className="request-refuse-button"
+                onClick={() =>
+                  handleAppointmentStatus(
+                    appointment.appointment_id,
+                    "REFUSE"
+                  )
+                }
               >
                 Refuser
               </button>
             </div>
           </div>
+        ))}
+      </div>
+    </section>
 
-          <div className="appointment-list-item">
-            <div className="dashboard-user-avatar">ID</div>
+    <section
+      className="dashboard-panel"
+      id="doctor-appointments"
+    >
+      <div className="dashboard-panel-heading">
+        <div>
+          <span>Agenda</span>
+          <h2>Tous mes rendez-vous</h2>
+        </div>
+      </div>
+
+      {!loading && appointments.length === 0 && (
+        <p>Aucun rendez-vous enregistré.</p>
+      )}
+
+      <div className="appointment-list">
+        {appointments.map((appointment) => (
+          <div
+            className="appointment-list-item"
+            key={appointment.appointment_id}
+          >
+            <div className="dashboard-user-avatar">
+              {appointment.patient_first_name
+                ?.charAt(0)}
+              {appointment.patient_last_name?.charAt(0)}
+            </div>
 
             <div>
-              <h3>Ibrahima Diallo</h3>
-              <p>21 juin 2026 · 11 h 30</p>
+              <h3>
+                {appointment.patient_first_name}{" "}
+                {appointment.patient_last_name}
+              </h3>
+
+              <p>
+                {formatDateTime(
+                  appointment.start_time
+                )}
+              </p>
+
+              <p>Motif : {appointment.reason}</p>
             </div>
 
-            <div className="doctor-request-actions">
-              <button
-                type="button"
-                className="request-accept-button"
-              >
-                Accepter
-              </button>
+            <div>
+              <span className="appointment-status">
+                {appointment.status}
+              </span>
 
-              <button
-                type="button"
-                className="request-refuse-button"
-              >
-                Refuser
-              </button>
+              {appointment.status === "CONFIRME" &&
+                appointment.meeting_url && (
+                  <button
+                    type="button"
+                    className="primary-dashboard-button"
+                    onClick={() =>
+                      window.open(
+                        appointment.meeting_url,
+                        "_blank",
+                        "noopener,noreferrer"
+                      )
+                    }
+                  >
+                    Démarrer la consultation
+                  </button>
+                )}
             </div>
           </div>
-        </div>
-      </article>
+        ))}
+      </div>
     </section>
+    <PrescriptionForm
+appointments={appointments}
+onPrescriptionCreated={loadDashboard}
+/>
+
   </main>
 </div>
+
 
 );
 }
 
 export default DoctorDashboard;
+
