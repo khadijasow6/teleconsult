@@ -56,6 +56,42 @@ const registerPatient = async (req, res) => {
       email,
       role: "PATIENT",
     };
+if (user.role === "MEDECIN") {
+const [doctorProfiles] = await pool.query(
+`       SELECT validation_status
+      FROM doctor_profiles
+      WHERE user_id = ?
+    `,
+[user.id]
+);
+
+if (doctorProfiles.length === 0) {
+return res.status(403).json({
+success: false,
+message:
+"Votre profil médecin est introuvable. Contactez l’administrateur.",
+});
+}
+
+const validationStatus =
+doctorProfiles[0].validation_status;
+
+if (validationStatus === "EN_ATTENTE") {
+return res.status(403).json({
+success: false,
+message:
+"Votre compte médecin est en attente de validation par l’administrateur.",
+});
+}
+
+if (validationStatus === "REFUSE") {
+return res.status(403).json({
+success: false,
+message:
+"Votre demande d’inscription comme médecin a été refusée.",
+});
+}
+}
 
     const token = generateToken(user);
 
@@ -74,6 +110,176 @@ const registerPatient = async (req, res) => {
     });
   }
 };
+const registerDoctor = async (req, res) => {
+let connection;
+
+try {
+const {
+first_name,
+last_name,
+email,
+password,
+phone,
+specialty_id,
+license_number,
+biography,
+years_of_experience,
+consultation_price,
+} = req.body;
+
+
+if (
+  !first_name ||
+  !last_name ||
+  !email ||
+  !password ||
+  !specialty_id ||
+  !license_number
+) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "Veuillez remplir tous les champs obligatoires.",
+  });
+}
+
+connection = await pool.getConnection();
+await connection.beginTransaction();
+
+const [existingUsers] = await connection.query(
+  "SELECT id FROM users WHERE email = ?",
+  [email]
+);
+
+if (existingUsers.length > 0) {
+  await connection.rollback();
+
+  return res.status(409).json({
+    success: false,
+    message:
+      "Cette adresse e-mail est déjà utilisée.",
+  });
+}
+
+const [existingLicenses] = await connection.query(
+  `
+    SELECT id
+    FROM doctor_profiles
+    WHERE license_number = ?
+  `,
+  [license_number]
+);
+
+if (existingLicenses.length > 0) {
+  await connection.rollback();
+
+  return res.status(409).json({
+    success: false,
+    message:
+      "Ce numéro de licence est déjà utilisé.",
+  });
+}
+
+const [specialties] = await connection.query(
+  "SELECT id FROM specialties WHERE id = ?",
+  [specialty_id]
+);
+
+if (specialties.length === 0) {
+  await connection.rollback();
+
+  return res.status(404).json({
+    success: false,
+    message:
+      "La spécialité sélectionnée est introuvable.",
+  });
+}
+
+const hashedPassword = await bcrypt.hash(
+  password,
+  10
+);
+
+const [userResult] = await connection.query(
+  `
+    INSERT INTO users
+    (
+      first_name,
+      last_name,
+      email,
+      password,
+      phone,
+      role
+    )
+    VALUES (?, ?, ?, ?, ?, 'MEDECIN')
+  `,
+  [
+    first_name,
+    last_name,
+    email,
+    hashedPassword,
+    phone || null,
+  ]
+);
+
+await connection.query(
+  `
+    INSERT INTO doctor_profiles
+    (
+      user_id,
+      specialty_id,
+      license_number,
+      biography,
+      years_of_experience,
+      consultation_price,
+      validation_status
+    )
+    VALUES (?, ?, ?, ?, ?, ?, 'EN_ATTENTE')
+  `,
+  [
+    userResult.insertId,
+    specialty_id,
+    license_number,
+    biography || null,
+    Number(years_of_experience) || 0,
+    Number(consultation_price) || 0,
+  ]
+);
+
+await connection.commit();
+
+return res.status(201).json({
+  success: true,
+  message:
+    "Votre demande d’inscription a été envoyée. Un administrateur doit valider votre compte.",
+});
+
+
+} catch (error) {
+if (connection) {
+await connection.rollback();
+}
+
+
+console.error(
+  "Erreur inscription médecin :",
+  error
+);
+
+return res.status(500).json({
+  success: false,
+  message:
+    "Impossible de créer le compte médecin.",
+});
+
+
+} finally {
+if (connection) {
+connection.release();
+}
+}
+};
+
 
 // Connexion d'un utilisateur
 const login = async (req, res) => {
@@ -146,6 +352,7 @@ const login = async (req, res) => {
 };
 
 module.exports = {
-  registerPatient,
-  login,
+registerPatient,
+registerDoctor,
+login,
 };

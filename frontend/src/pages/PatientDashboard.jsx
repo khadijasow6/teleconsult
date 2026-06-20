@@ -549,6 +549,8 @@ return ( <div className="dashboard-layout"> <aside className="dashboard-sidebar"
               onChange={(event) =>
                 setSearch(event.target.value)
               }
+              className="doctor-search-input"
+
             />
 
             <select
@@ -556,12 +558,17 @@ return ( <div className="dashboard-layout"> <aside className="dashboard-sidebar"
               onChange={(event) =>
                 setSelectedSpecialty(
                   event.target.value
+                  
                 )
+                
               }
+              className="doctor-specialty-select"
+
             >
               <option value="">
                 Toutes les spécialités
               </option>
+              
 
               {specialties.map((specialty) => (
                 <option
@@ -570,6 +577,7 @@ return ( <div className="dashboard-layout"> <aside className="dashboard-sidebar"
                 >
                   {specialty.name}
                 </option>
+                
               ))}
             </select>
           </div>

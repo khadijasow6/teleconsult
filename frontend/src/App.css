@@ -1828,5 +1828,109 @@ justify-self: start;
 .nav-buttons .appointment-btn:visited {
   color: #ffffff;
 }
+.auth-form select,
+.auth-form textarea {
+width: 100%;
+padding: 16px 18px;
+border: 1px solid #cfe0ef;
+border-radius: 12px;
+background-color: #f8fbfe;
+color: #123b5d;
+font-size: 16px;
+font-family: inherit;
+outline: none;
+transition:
+border-color 0.2s ease,
+box-shadow 0.2s ease,
+background-color 0.2s ease;
+}
+
+.auth-form select {
+cursor: pointer;
+}
+
+.auth-form select:focus,
+.auth-form textarea:focus {
+border-color: #1976bd;
+background-color: #ffffff;
+box-shadow: 0 0 0 4px rgba(25, 118, 189, 0.12);
+}
+
+.auth-form textarea {
+resize: vertical;
+min-height: 120px;
+}
+.doctor-search-controls {
+display: flex;
+align-items: center;
+gap: 14px;
+width: 100%;
+margin-top: 24px;
+}
+
+.doctor-search-input,
+.doctor-specialty-select {
+min-height: 52px;
+padding: 0 18px;
+border: 1px solid #cfe0ef;
+border-radius: 12px;
+background-color: #ffffff;
+color: #123b5d;
+font-family: inherit;
+font-size: 16px;
+outline: none;
+transition:
+border-color 0.2s ease,
+box-shadow 0.2s ease;
+}
+
+.doctor-search-input {
+flex: 1;
+}
+
+.doctor-specialty-select {
+min-width: 230px;
+cursor: pointer;
+}
+
+.doctor-search-input:focus,
+.doctor-specialty-select:focus {
+border-color: #1976bd;
+box-shadow: 0 0 0 4px rgba(25, 118, 189, 0.12);
+}
+
+@media (max-width: 700px) {
+.doctor-search-controls {
+flex-direction: column;
+align-items: stretch;
+}
+
+.doctor-specialty-select {
+width: 100%;
+min-width: 0;
+}
+}
+.prescription-select {
+width: 100%;
+min-height: 52px;
+padding: 0 18px;
+border: 1px solid #cfe0ef;
+border-radius: 12px;
+background-color: #ffffff;
+color: #123b5d;
+font-family: inherit;
+font-size: 16px;
+cursor: pointer;
+outline: none;
+transition:
+border-color 0.2s ease,
+box-shadow 0.2s ease;
+}
+
+.prescription-select:focus {
+border-color: #1976bd;
+box-shadow: 0 0 0 4px rgba(25, 118, 189, 0.12);
+}
+
 
 

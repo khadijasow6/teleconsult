@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import "../App.css";
@@ -13,10 +13,42 @@ email: "",
 phone: "",
 password: "",
 confirmPassword: "",
+account_type: "PATIENT",
+specialty_id: "",
+license_number: "",
+biography: "",
+years_of_experience: "",
+consultation_price: "",
+
 });
+
 
 const [error, setError] = useState("");
 const [loading, setLoading] = useState(false);
+const [specialties, setSpecialties] = useState([]);
+
+useEffect(() => {
+const loadSpecialties = async () => {
+try {
+const response = await api.get("/specialties");
+
+
+  setSpecialties(
+    response.data.specialties || []
+  );
+} catch (requestError) {
+  console.error(
+    "Erreur chargement spécialités :",
+    requestError
+  );
+}
+
+
+};
+
+loadSpecialties();
+}, []);
+
 
 const handleChange = (event) => {
 setFormData({
@@ -43,18 +75,52 @@ if (formData.password.length < 6) {
 setLoading(true);
 
 try {
-  const response = await api.post("/auth/register", {
-    first_name: formData.first_name,
-    last_name: formData.last_name,
-    email: formData.email,
-    phone: formData.phone,
-    password: formData.password,
-  });
+  if (formData.account_type === "MEDECIN") {
+const response = await api.post(
+"/auth/register-doctor",
+{
+first_name: formData.first_name,
+last_name: formData.last_name,
+email: formData.email,
+phone: formData.phone,
+password: formData.password,
+specialty_id: formData.specialty_id,
+license_number: formData.license_number,
+biography: formData.biography,
+years_of_experience:
+formData.years_of_experience,
+consultation_price:
+formData.consultation_price,
+}
+);
 
-  localStorage.setItem("token", response.data.token);
-  localStorage.setItem("user", JSON.stringify(response.data.user));
+alert(response.data.message);
+navigate("/login");
+} else {
+const response = await api.post(
+"/auth/register",
+{
+first_name: formData.first_name,
+last_name: formData.last_name,
+email: formData.email,
+phone: formData.phone,
+password: formData.password,
+}
+);
 
-  navigate("/patient/dashboard");
+localStorage.setItem(
+"token",
+response.data.token
+);
+
+localStorage.setItem(
+"user",
+JSON.stringify(response.data.user)
+);
+
+navigate("/patient/dashboard");
+}
+
 } catch (requestError) {
   setError(
     requestError.response?.data?.message ||
@@ -95,6 +161,32 @@ return ( <main className="auth-page register-page"> <div className="auth-contain
         </div>
 
         {error && <p className="auth-error">{error}</p>}
+        <div className="form-group">
+  <label htmlFor="account-type">
+    Type de compte
+  </label>
+
+<select
+id="account-type"
+name="account_type"
+value={formData.account_type}
+onChange={handleChange}
+required
+
+>
+
+
+<option value="PATIENT">
+  Je suis un patient
+</option>
+
+<option value="MEDECIN">
+  Je suis un médecin
+</option>
+
+  </select>
+</div>
+
 
         <div className="register-name-grid">
           <div className="form-group">
@@ -152,6 +244,105 @@ return ( <main className="auth-page register-page"> <div className="auth-contain
             placeholder="+221 77 000 00 00"
           />
         </div>
+      
+{formData.account_type === "MEDECIN" && (
+<> <div className="form-group"> <label htmlFor="register-specialty">
+Spécialité </label>
+
+
+  <select
+    id="register-specialty"
+    name="specialty_id"
+    value={formData.specialty_id}
+    onChange={handleChange}
+    required
+  >
+    <option value="">
+      Sélectionnez une spécialité
+    </option>
+
+    {specialties.map((specialty) => (
+      <option
+        key={specialty.id}
+        value={specialty.id}
+      >
+        {specialty.name}
+      </option>
+    ))}
+  </select>
+</div>
+
+<div className="form-group">
+  <label htmlFor="register-license">
+    Numéro de licence
+  </label>
+
+  <input
+    id="register-license"
+    type="text"
+    name="license_number"
+    value={formData.license_number}
+    onChange={handleChange}
+    placeholder="Exemple : SN-MED-2026-002"
+    required
+  />
+</div>
+
+<div className="form-group">
+  <label htmlFor="register-experience">
+    Années d’expérience
+  </label>
+
+  <input
+    id="register-experience"
+    type="number"
+    name="years_of_experience"
+    value={formData.years_of_experience}
+    onChange={handleChange}
+    placeholder="Exemple : 5"
+    min="0"
+    required
+  />
+</div>
+
+<div className="form-group">
+  <label htmlFor="register-price">
+    Tarif de consultation (FCFA)
+  </label>
+
+  <input
+    id="register-price"
+    type="number"
+    name="consultation_price"
+    value={formData.consultation_price}
+    onChange={handleChange}
+    placeholder="Exemple : 15000"
+    min="0"
+    required
+  />
+</div>
+
+<div className="form-group">
+  <label htmlFor="register-biography">
+    Biographie professionnelle
+  </label>
+
+  <textarea
+    id="register-biography"
+    name="biography"
+    value={formData.biography}
+    onChange={handleChange}
+    placeholder="Présentez brièvement votre parcours et votre expérience."
+    rows="4"
+  />
+</div>
+
+
+</>
+)}
+
+
+
 
         <div className="form-group">
           <label htmlFor="register-password">Mot de passe</label>

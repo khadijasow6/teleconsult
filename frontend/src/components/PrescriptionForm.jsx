@@ -116,6 +116,8 @@ return ( <section className="dashboard-panel" id="doctor-prescriptions"> <div cl
           value={formData.appointment_id}
           onChange={handleChange}
           required
+          className="prescription-select"
+
         >
           <option value="">Choisir un patient</option>
 
