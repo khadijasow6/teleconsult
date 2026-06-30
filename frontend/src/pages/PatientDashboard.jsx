@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import PatientPrescriptions from "../components/PatientPrescriptions";
+import ProfilePhoto from "../components/ProfilePhoto";
 import "../App.css";
 
 function PatientDashboard() {
@@ -343,10 +344,18 @@ return ( <div className="dashboard-layout"> <aside className="dashboard-sidebar"
 
       <div className="dashboard-user">
         <div className="dashboard-user-avatar">
-          {user.first_name?.trim().charAt(0)}
-          {user.last_name?.trim().charAt(0)}
-        </div>
-
+  {user.profile_photo ? (
+    <img
+      src={`http://localhost:5000${user.profile_photo}`}
+      alt="Photo de profil"
+    />
+  ) : (
+    <>
+      {user.first_name?.trim().charAt(0)}
+      {user.last_name?.trim().charAt(0)}
+    </>
+  )}
+</div>
         <div>
           <strong>
             {user.first_name?.trim()}{" "}
@@ -873,7 +882,7 @@ return ( <div className="dashboard-layout"> <aside className="dashboard-sidebar"
             <h2>Mon profil</h2>
           </div>
         </div>
-
+       <ProfilePhoto user={user} />
         <div className="appointment-list">
           <div className="appointment-list-item">
             <div>

@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import PrescriptionForm from "../components/PrescriptionForm";
+import ProfilePhoto from "../components/ProfilePhoto";
 
 import "../App.css";
-
 function DoctorDashboard() {
 const navigate = useNavigate();
 
@@ -340,10 +340,18 @@ Mon profil
 
       <div className="dashboard-user">
         <div className="dashboard-user-avatar">
-          {user.first_name?.trim().charAt(0)}
-          {user.last_name?.trim().charAt(0)}
-        </div>
-
+  {user.profile_photo ? (
+    <img
+      src={`http://localhost:5000${user.profile_photo}`}
+      alt="Photo de profil"
+    />
+  ) : (
+    <>
+      {user.first_name?.trim().charAt(0)}
+      {user.last_name?.trim().charAt(0)}
+    </>
+  )}
+</div>
         <div>
           <strong>
             Dr {user.first_name?.trim()}{" "}
@@ -868,7 +876,7 @@ Mon profil
       </div>
     </div>
 
-
+<ProfilePhoto user={user} />
 <div className="appointment-list">
   <div className="appointment-list-item">
     <div>

@@ -1,12 +1,14 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
+
 require("dotenv").config();
 
 const pool = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const specialtyRoutes = require("./routes/specialtyRoutes");
 const doctorRoutes = require("./routes/doctorRoutes");
-const appointmentRoutes = require("./routes/appointmentRoutes")
+const appointmentRoutes = require("./routes/appointmentRoutes");
 const prescriptionRoutes = require("./routes/prescriptionRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
@@ -14,6 +16,14 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Permet au frontend d'afficher les photos enregistrées
+// Exemple : http://localhost:5000/uploads/profiles/photo.jpg
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "../uploads"))
+);
+
 app.use("/api/auth", authRoutes);
 app.use("/api/specialties", specialtyRoutes);
 app.use("/api/doctors", doctorRoutes);
@@ -22,7 +32,7 @@ app.use("/api/prescriptions", prescriptionRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
- res.send("Bienvenue sur SamaSanté");
+  res.send("Bienvenue sur SamaSanté");
 });
 
 const PORT = process.env.PORT || 5000;
@@ -37,7 +47,10 @@ const startServer = async () => {
       console.log(`Serveur démarré sur http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error("Erreur de connexion à MySQL :", error.message);
+    console.error(
+      "Erreur de connexion à MySQL :",
+      error.message
+    );
   }
 };
 

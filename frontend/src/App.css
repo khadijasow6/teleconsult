@@ -1931,6 +1931,74 @@ box-shadow 0.2s ease;
 border-color: #1976bd;
 box-shadow: 0 0 0 4px rgba(25, 118, 189, 0.12);
 }
+.hero-actions a {
+text-decoration: none;
+}
+/* Zone de modification de la photo de profil */
+.profile-photo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 30px;
+}
 
+/* Cercle contenant la photo ou les initiales */
+.profile-photo-preview {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1976bd;
+  color: #ffffff;
+  font-size: 38px;
+  font-weight: 700;
+  border: 4px solid #e5f1fa;
+}
+
+/* L'image remplit correctement le cercle */
+.profile-photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Formulaire de sélection de la photo */
+.profile-photo-section form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/* Bouton permettant de choisir une image */
+.profile-photo-section label {
+  padding: 10px 18px;
+  border: 1px solid #1976bd;
+  border-radius: 8px;
+  color: #1976bd;
+  background-color: #ffffff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Cache le bouton de fichier classique */
+.profile-photo-section input[type="file"] {
+  display: none;
+}
+/* Photo affichée dans le petit cercle du tableau de bord */
+.dashboard-user-avatar {
+  overflow: hidden;
+}
+
+.dashboard-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 
 
