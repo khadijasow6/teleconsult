@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const { notifyUser } = require("../utils/notify");
 
 const getUserId = (req) =>
 req.user?.id || req.user?.userId || req.user?.user_id;
@@ -60,12 +61,20 @@ const [appointments] = await connection.query(
   `
     SELECT
       ap.id,
-      ap.status
+      ap.status,
+      patient.id AS patient_user_id,
+      patient.email AS patient_email,
+      TRIM(doctor.first_name) AS doctor_first_name,
+      TRIM(doctor.last_name) AS doctor_last_name
     FROM appointments ap
     INNER JOIN availabilities a
       ON a.id = ap.availability_id
     INNER JOIN doctor_profiles dp
       ON dp.id = a.doctor_profile_id
+    INNER JOIN users doctor
+      ON doctor.id = dp.user_id
+    INNER JOIN users patient
+      ON patient.id = ap.patient_id
     WHERE ap.id = ?
       AND dp.user_id = ?
     LIMIT 1
@@ -188,6 +197,19 @@ await connection.query(
 );
 
 await connection.commit();
+
+const appointmentInfo = appointments[0];
+const doctorFullName = `Dr ${appointmentInfo.doctor_first_name} ${appointmentInfo.doctor_last_name}`;
+
+await notifyUser({
+  userId: appointmentInfo.patient_user_id,
+  type: "ORDONNANCE_DISPONIBLE",
+  title: "Nouvelle ordonnance disponible",
+  message: `${doctorFullName} a rédigé une ordonnance suite à votre consultation. Vous pouvez la consulter depuis votre tableau de bord.`,
+  appointmentId: appointment_id,
+  email: appointmentInfo.patient_email,
+  emailSubject: "SamaSanté — Votre ordonnance est disponible",
+});
 
 return res.status(201).json({
   message: "Ordonnance enregistrée avec succès.",

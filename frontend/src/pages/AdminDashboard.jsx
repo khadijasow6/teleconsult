@@ -5,6 +5,7 @@ useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import NotificationBell from "../components/NotificationBell";
 import "../App.css";
 
 function AdminDashboard() {
@@ -305,7 +306,8 @@ Paramètres
           Gérez les utilisateurs, les médecins et l’activité de SamaSanté.
         </p>
       </div>
-
+      
+      <NotificationBell />
       <div className="dashboard-user">
         <div className="dashboard-user-avatar">
           {user.first_name?.charAt(0)}

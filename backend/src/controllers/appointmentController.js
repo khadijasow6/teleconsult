@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const { notifyUser } = require("../utils/notify");
 
 const getUserId = (req) =>
 req.user?.id || req.user?.userId || req.user?.user_id;
@@ -228,10 +229,16 @@ const [availabilities] = await db.query(
   `
     SELECT
       a.id,
-      a.start_time
+      a.start_time,
+      doctor.id AS doctor_user_id,
+      doctor.email AS doctor_email,
+      TRIM(doctor.first_name) AS doctor_first_name,
+      TRIM(doctor.last_name) AS doctor_last_name
     FROM availabilities a
     INNER JOIN doctor_profiles dp
       ON dp.id = a.doctor_profile_id
+    INNER JOIN users doctor
+      ON doctor.id = dp.user_id
     WHERE a.id = ?
       AND a.start_time > NOW()
       AND dp.validation_status = 'VALIDE'
@@ -278,6 +285,29 @@ const [result] = await db.query(
     reason?.trim() || "Consultation médicale",
   ]
 );
+
+const doctorInfo = availabilities[0];
+const appointmentDate = new Date(
+  doctorInfo.start_time
+).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
+
+const [patientRows] = await db.query(
+  `SELECT TRIM(first_name) AS first_name, TRIM(last_name) AS last_name FROM users WHERE id = ? LIMIT 1`,
+  [patientId]
+);
+const patientName = patientRows[0]
+  ? `${patientRows[0].first_name} ${patientRows[0].last_name}`
+  : "Un patient";
+
+await notifyUser({
+  userId: doctorInfo.doctor_user_id,
+  type: "RENDEZ_VOUS_CREE",
+  title: "Nouvelle demande de rendez-vous",
+  message: `${patientName} a demandé un rendez-vous le ${appointmentDate}.`,
+  appointmentId: result.insertId,
+  email: doctorInfo.doctor_email,
+  emailSubject: "SamaSanté — Nouvelle demande de rendez-vous",
+});
 
 return res.status(201).json({
   message: "Rendez-vous réservé avec succès.",
@@ -430,12 +460,24 @@ if (!["CONFIRME", "REFUSE"].includes(status)) {
 
 const [appointments] = await db.query(
   `
-    SELECT ap.id
+    SELECT
+      ap.id,
+      a.start_time,
+      patient.id AS patient_user_id,
+      patient.email AS patient_email,
+      TRIM(patient.first_name) AS patient_first_name,
+      TRIM(patient.last_name) AS patient_last_name,
+      TRIM(doctor.first_name) AS doctor_first_name,
+      TRIM(doctor.last_name) AS doctor_last_name
     FROM appointments ap
     INNER JOIN availabilities a
       ON a.id = ap.availability_id
     INNER JOIN doctor_profiles dp
       ON dp.id = a.doctor_profile_id
+    INNER JOIN users doctor
+      ON doctor.id = dp.user_id
+    INNER JOIN users patient
+      ON patient.id = ap.patient_id
     WHERE ap.id = ?
       AND dp.user_id = ?
     LIMIT 1
@@ -448,6 +490,12 @@ if (appointments.length === 0) {
     message: "Rendez-vous introuvable.",
   });
 }
+
+const appointmentInfo = appointments[0];
+const doctorFullName = `Dr ${appointmentInfo.doctor_first_name} ${appointmentInfo.doctor_last_name}`;
+const appointmentDate = new Date(
+  appointmentInfo.start_time
+).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
 
 if (status === "CONFIRME") {
   const meetingRoom = `samasante-${appointmentId}-${Date.now()}`;
@@ -477,6 +525,28 @@ if (status === "CONFIRME") {
     [appointmentId]
   );
 }
+
+await notifyUser({
+  userId: appointmentInfo.patient_user_id,
+  type:
+    status === "CONFIRME"
+      ? "RENDEZ_VOUS_CONFIRME"
+      : "RENDEZ_VOUS_REFUSE",
+  title:
+    status === "CONFIRME"
+      ? "Rendez-vous confirmé"
+      : "Rendez-vous refusé",
+  message:
+    status === "CONFIRME"
+      ? `${doctorFullName} a confirmé votre rendez-vous du ${appointmentDate}. Vous pourrez rejoindre la téléconsultation depuis votre tableau de bord à l'heure prévue.`
+      : `${doctorFullName} n'a malheureusement pas pu accepter votre rendez-vous du ${appointmentDate}. Vous pouvez réserver un autre créneau.`,
+  appointmentId,
+  email: appointmentInfo.patient_email,
+  emailSubject:
+    status === "CONFIRME"
+      ? "SamaSanté — Rendez-vous confirmé"
+      : "SamaSanté — Rendez-vous refusé",
+});
 
 return res.status(200).json({
   message:

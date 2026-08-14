@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const { notifyUser } = require("../utils/notify");
 
 const getAdminDashboard = async (req, res) => {
 try {
@@ -130,6 +131,27 @@ if (!allowedStatuses.includes(status)) {
   });
 }
 
+const [doctorRows] = await db.query(
+  `
+    SELECT
+      u.id AS user_id,
+      u.email,
+      TRIM(u.first_name) AS first_name,
+      TRIM(u.last_name) AS last_name
+    FROM doctor_profiles dp
+    INNER JOIN users u ON u.id = dp.user_id
+    WHERE dp.id = ?
+    LIMIT 1
+  `,
+  [doctorProfileId]
+);
+
+if (doctorRows.length === 0) {
+  return res.status(404).json({
+    message: "Médecin introuvable.",
+  });
+}
+
 const [result] = await db.query(
   `
     UPDATE doctor_profiles
@@ -142,6 +164,28 @@ const [result] = await db.query(
 if (result.affectedRows === 0) {
   return res.status(404).json({
     message: "Médecin introuvable.",
+  });
+}
+
+if (status === "VALIDE" || status === "REFUSE") {
+  const doctor = doctorRows[0];
+
+  await notifyUser({
+    userId: doctor.user_id,
+    type: status === "VALIDE" ? "MEDECIN_VALIDE" : "MEDECIN_REFUSE",
+    title:
+      status === "VALIDE"
+        ? "Votre compte a été validé"
+        : "Votre demande a été refusée",
+    message:
+      status === "VALIDE"
+        ? "Votre compte médecin a été validé par l'administrateur. Vous pouvez désormais vous connecter à votre tableau de bord."
+        : "Votre demande d'inscription en tant que médecin a été refusée par l'administrateur.",
+    email: doctor.email,
+    emailSubject:
+      status === "VALIDE"
+        ? "SamaSanté — Votre compte médecin a été validé"
+        : "SamaSanté — Votre demande a été refusée",
   });
 }
 

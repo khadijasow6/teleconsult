@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import PatientPrescriptions from "../components/PatientPrescriptions";
 import ProfilePhoto from "../components/ProfilePhoto";
+import NotificationBell from "../components/NotificationBell";
 import "../App.css";
 
 function PatientDashboard() {
@@ -341,6 +342,8 @@ return ( <div className="dashboard-layout"> <aside className="dashboard-sidebar"
           ordonnances.
         </p>
       </div>
+
+      <NotificationBell />
 
       <div className="dashboard-user">
         <div className="dashboard-user-avatar">

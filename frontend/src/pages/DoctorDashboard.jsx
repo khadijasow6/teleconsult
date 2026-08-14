@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import PrescriptionForm from "../components/PrescriptionForm";
 import ProfilePhoto from "../components/ProfilePhoto";
+import NotificationBell from "../components/NotificationBell";
 
 import "../App.css";
 function DoctorDashboard() {
@@ -337,6 +338,8 @@ Mon profil
           vos patients.
         </p>
       </div>
+
+      <NotificationBell />
 
       <div className="dashboard-user">
         <div className="dashboard-user-avatar">
@@ -917,4 +920,3 @@ Mon profil
 }
 
 export default DoctorDashboard;
-
