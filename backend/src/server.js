@@ -12,7 +12,7 @@ const appointmentRoutes = require("./routes/appointmentRoutes");
 const prescriptionRoutes = require("./routes/prescriptionRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
-
+const paymentRoutes = require("./routes/paymentRoutes");
 const app = express();
 
 app.use(cors());
@@ -32,7 +32,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/prescriptions", prescriptionRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
-
+app.use("/api/payments", paymentRoutes);
 app.get("/", (req, res) => {
   res.send("Bienvenue sur SamaSanté");
 });

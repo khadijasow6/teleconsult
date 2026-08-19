@@ -142,16 +142,17 @@ timeStyle: "short",
 };
 
 const getAppointmentStatus = (status) => {
-const statuses = {
-EN_ATTENTE: "En attente",
-CONFIRME: "Confirmé",
-REFUSE: "Refusé",
-ANNULE: "Annulé",
-TERMINE: "Terminé",
-};
-
-return statuses[status] || status;
-};
+  const statuses = {
+  EN_ATTENTE_PAIEMENT: "En attente de paiement",
+  EN_ATTENTE: "En attente",
+  CONFIRME: "Confirmé",
+  REFUSE: "Refusé",
+  ANNULE: "Annulé",
+  TERMINE: "Terminé",
+  };
+  
+  return statuses[status] || status;
+  };
 
 
 const confirmedAppointments = appointments.filter(

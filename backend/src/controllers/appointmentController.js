@@ -35,7 +35,7 @@ const [slots] = await db.query(`       SELECT
         ON s.id = dp.specialty_id
       LEFT JOIN appointments ap
         ON ap.availability_id = a.id
-        AND ap.status IN ('EN_ATTENTE', 'CONFIRME')
+        AND ap.status IN ('EN_ATTENTE_PAIEMENT', 'EN_ATTENTE', 'CONFIRME')
       WHERE a.start_time > NOW()
         AND dp.validation_status = 'VALIDE'
         AND ap.id IS NULL
@@ -230,6 +230,7 @@ const [availabilities] = await db.query(
     SELECT
       a.id,
       a.start_time,
+      dp.consultation_price,
       doctor.id AS doctor_user_id,
       doctor.email AS doctor_email,
       TRIM(doctor.first_name) AS doctor_first_name,
@@ -258,7 +259,7 @@ const [existingAppointments] = await db.query(
     SELECT id
     FROM appointments
     WHERE availability_id = ?
-      AND status IN ('EN_ATTENTE', 'CONFIRME')
+      AND status IN ('EN_ATTENTE_PAIEMENT', 'EN_ATTENTE', 'CONFIRME')
     LIMIT 1
   `,
   [availability_id]
@@ -287,31 +288,14 @@ const [result] = await db.query(
 );
 
 const doctorInfo = availabilities[0];
-const appointmentDate = new Date(
-  doctorInfo.start_time
-).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
-
-const [patientRows] = await db.query(
-  `SELECT TRIM(first_name) AS first_name, TRIM(last_name) AS last_name FROM users WHERE id = ? LIMIT 1`,
-  [patientId]
-);
-const patientName = patientRows[0]
-  ? `${patientRows[0].first_name} ${patientRows[0].last_name}`
-  : "Un patient";
-
-await notifyUser({
-  userId: doctorInfo.doctor_user_id,
-  type: "RENDEZ_VOUS_CREE",
-  title: "Nouvelle demande de rendez-vous",
-  message: `${patientName} a demandé un rendez-vous le ${appointmentDate}.`,
-  appointmentId: result.insertId,
-  email: doctorInfo.doctor_email,
-  emailSubject: "SamaSanté — Nouvelle demande de rendez-vous",
-});
 
 return res.status(201).json({
-  message: "Rendez-vous réservé avec succès.",
+  message:
+    "Rendez-vous créé. Veuillez procéder au paiement pour le confirmer.",
   appointment_id: result.insertId,
+  consultation_price: doctorInfo.consultation_price,
+  doctor_first_name: doctorInfo.doctor_first_name,
+  doctor_last_name: doctorInfo.doctor_last_name,
 });
 
 
@@ -417,6 +401,7 @@ const [appointments] = await db.query(
     INNER JOIN users patient
       ON patient.id = ap.patient_id
     WHERE dp.user_id = ?
+      AND ap.status != 'EN_ATTENTE_PAIEMENT'
     ORDER BY a.start_time DESC
   `,
   [userId]
