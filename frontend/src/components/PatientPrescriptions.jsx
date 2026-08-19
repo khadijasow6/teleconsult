@@ -5,6 +5,7 @@ function PatientPrescriptions() {
 const [prescriptions, setPrescriptions] = useState([]);
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState("");
+const [downloadingId, setDownloadingId] = useState(null);
 
 useEffect(() => {
 const loadPrescriptions = async () => {
@@ -49,6 +50,40 @@ return new Date(dateValue).toLocaleDateString(
     dateStyle: "long",
   }
 );
+
+
+};
+
+const handleDownloadPdf = async (prescriptionId) => {
+try {
+setDownloadingId(prescriptionId);
+
+
+  const response = await api.get(
+    `/prescriptions/${prescriptionId}/pdf`,
+    { responseType: "blob" }
+  );
+
+  const blobUrl = window.URL.createObjectURL(
+    new Blob([response.data], { type: "application/pdf" })
+  );
+
+  const link = document.createElement("a");
+  link.href = blobUrl;
+  link.setAttribute(
+    "download",
+    `ordonnance-${prescriptionId}.pdf`
+  );
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(blobUrl);
+} catch (requestError) {
+  console.error(requestError);
+  alert("Impossible de télécharger le PDF pour le moment.");
+} finally {
+  setDownloadingId(null);
+}
 
 
 };
@@ -128,6 +163,23 @@ return ( <section className="dashboard-panel"> <div className="dashboard-panel-h
               </div>
             </div>
           ))}
+
+          <br />
+
+          <button
+            type="button"
+            className="primary-dashboard-button"
+            onClick={() =>
+              handleDownloadPdf(prescription.prescription_id)
+            }
+            disabled={
+              downloadingId === prescription.prescription_id
+            }
+          >
+            {downloadingId === prescription.prescription_id
+              ? "Génération..."
+              : "📥 Télécharger en PDF"}
+          </button>
         </div>
       </article>
     ))}
