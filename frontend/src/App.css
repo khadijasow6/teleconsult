@@ -2305,4 +2305,134 @@ text-decoration: none;
   font-size: 14px;
   margin-bottom: 22px;
   }
+  /* Historique médical - frise chronologique */
+
+.medical-timeline {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  }
+  
+  .medical-timeline-item {
+  display: flex;
+  gap: 16px;
+  }
+  
+  .medical-timeline-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  }
+  
+  .medical-timeline-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background-color: #eef7ff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 2px #deebf5;
+  border-radius: 50%;
+  font-size: 20px;
+  }
+  
+  .medical-timeline-line {
+  flex: 1;
+  width: 2px;
+  background-color: #deebf5;
+  margin: 4px 0;
+  min-height: 20px;
+  }
+  
+  .medical-timeline-item:last-child .medical-timeline-line {
+  display: none;
+  }
+  
+  .medical-timeline-content {
+  flex: 1;
+  padding-bottom: 24px;
+  }
+  
+  .medical-timeline-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ffffff;
+  border: 1px solid #deebf5;
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 6px 18px rgba(23, 59, 92, 0.05);
+  }
+  
+  .medical-timeline-header h3 {
+  color: #173b5c;
+  font-size: 15px;
+  margin-bottom: 2px;
+  }
+  
+  .medical-timeline-header p {
+  color: #7890a4;
+  font-size: 12.5px;
+  }
+  
+  .medical-timeline-date {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #56728a;
+  font-size: 12.5px;
+  white-space: nowrap;
+  }
+  
+  .medical-timeline-chevron {
+  color: #176baf;
+  font-size: 11px;
+  }
+  
+  .medical-timeline-details {
+  background-color: #f9fbfd;
+  border: 1px solid #eef4f9;
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+  padding: 16px;
+  margin-top: -8px;
+  font-size: 13.5px;
+  color: #33475a;
+  line-height: 1.6;
+  }
+  
+  .medical-timeline-details p {
+  margin-bottom: 8px;
+  }
+  
+  .medical-timeline-prescription {
+  margin-top: 12px;
+  background-color: #eef7ff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  }
+  
+  .medical-timeline-prescription h4 {
+  color: #176baf;
+  font-size: 13px;
+  margin-bottom: 8px;
+  }
+  
+  .medical-timeline-prescription ul {
+  padding-left: 18px;
+  }
+  
+  .medical-timeline-prescription li {
+  margin-bottom: 4px;
+  font-size: 13px;
+  }
+  
+  .medical-timeline-pending {
+  color: #a3b6c6;
+  font-style: italic;
+  }
 

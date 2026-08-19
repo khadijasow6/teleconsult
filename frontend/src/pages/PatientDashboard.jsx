@@ -5,6 +5,7 @@ import PatientPrescriptions from "../components/PatientPrescriptions";
 import ProfilePhoto from "../components/ProfilePhoto";
 import NotificationBell from "../components/NotificationBell";
 import PaymentModal from "../components/PaymentModal";
+import MedicalHistory from "../components/MedicalHistory";
 import "../App.css";
 
 function PatientDashboard() {
@@ -287,6 +288,15 @@ function PatientDashboard() {
             >
               <span>📄</span>
               Mes ordonnances
+            </button>
+
+            <button
+              type="button"
+              className={menuClass("history")}
+              onClick={() => setActiveSection("history")}
+            >
+              <span>🕓</span>
+              Historique médical
             </button>
 
             <button
@@ -750,6 +760,8 @@ function PatientDashboard() {
           )}
 
           {activeSection === "prescriptions" && <PatientPrescriptions />}
+
+          {activeSection === "history" && <MedicalHistory />}
 
           {activeSection === "profile" && (
             <section className="dashboard-panel">
