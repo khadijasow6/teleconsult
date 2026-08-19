@@ -4,8 +4,9 @@ const {
   registerPatient,
   registerDoctor,
   login,
+  requestPasswordReset,
+  resetPassword,
 } = require("../controllers/authController");
-
 const {
   protect,
 } = require("../middlewares/authMiddleware");
@@ -29,6 +30,11 @@ router.post("/register-doctor", registerDoctor);
 
 // Connexion
 router.post("/login", login);
+// Demande de réinitialisation de mot de passe
+router.post("/forgot-password", requestPasswordReset);
+
+// Réinitialisation du mot de passe avec le token
+router.post("/reset-password", resetPassword);
 
 // Récupérer le profil complet
 router.get("/profile", protect, getMyProfile);

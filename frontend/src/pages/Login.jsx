@@ -123,9 +123,9 @@ return ( <main className="auth-page"> <div className="auth-container"> <section 
             <span>Se souvenir de moi</span>
           </label>
 
-          <button type="button" className="forgot-password">
+          <Link to="/forgot-password" className="forgot-password">
             Mot de passe oublié ?
-          </button>
+          </Link>
         </div>
 
         <button
